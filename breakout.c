@@ -23,12 +23,6 @@
 #define BALL_SPEED 350
 #define PAD_VEL BALL_SPEED * 1.5
 
-typedef struct 
-{
-   SDL_Rect rect;
-   int alive;
-} Target;
-
 #define COL_LEN_TARGETS 5
 #define ROW_LEN_TARGETS 8
 #define TARGETS_IN_BETWEEN BALL_SIZE * 2
@@ -37,6 +31,12 @@ typedef struct
 #define BG_COLOR 0x181818FF
 #define WHITE_COLOR 0xFFFFFFFF
 
+typedef struct 
+{
+   SDL_Rect rect;
+   int alive;
+} Target;
+
 // state variables
 SDL_Renderer *renderer;
 SDL_Rect pad;
@@ -44,12 +44,13 @@ SDL_Rect ball;
 int pad_x = WIDTH / 2 - PAD_WIDTH / 2;
 int ball_x = BALL_X;
 int ball_y = BALL_Y;
-int ball_dx = 1;
-int ball_dy = 1;
-int running = 1;
-int loose = 0;
-int win = 0;
-int pause = 0;
+Uint8 ball_dx = 1;
+Uint8 ball_dy = 1;
+Uint8 running = 1;
+Uint8 loose = 0;
+Uint8 win = 0;
+Uint8 count_targets = ROW_LEN_TARGETS * COL_LEN_TARGETS;
+Uint8 pause = 0;
 Target targets[ROW_LEN_TARGETS * COL_LEN_TARGETS];
 
 void set_color(SDL_Renderer *renderer, Uint32 color)
@@ -97,6 +98,7 @@ void ball_tcollision()
          if (overlaps(&ball, &target->rect) && target->alive){
             ball_dy *= -1;
             target->alive = 0;
+            count_targets--;
          }
       }
    }
@@ -177,6 +179,7 @@ void reset()
 {
    loose = 0;
    win = 0;
+   count_targets = ROW_LEN_TARGETS * COL_LEN_TARGETS;
    pause = 1;
    ball_x = BALL_X;
    ball_y = BALL_Y;
@@ -226,7 +229,8 @@ int main(void)
       if (pause) continue;
       if (keyboard[SDL_SCANCODE_A]) move_left();
       if (keyboard[SDL_SCANCODE_D]) move_right();
-      if (loose) reset();
+      win = count_targets == 0;
+      if (loose || win) reset();
 
       set_color(renderer, BG_COLOR);
       SDL_RenderClear(renderer);
